@@ -6,6 +6,8 @@ public class Paint {
 
 	int fh = 1000;
 	int fb = 1500;
+	int fuex = 0;
+	int fuey = 0;
 	int penstate = 0;
 	int sd = 2;
 	private boolean ende;
@@ -15,7 +17,7 @@ public class Paint {
 	private Stift s;
 	private Tastatur t;
 	private Maus m;
-	private Knopf endknopf,optionen,farbe,farbe1,farbvs,farbueb,farbrnd,werkzeugoption,pen;
+	private Knopf endknopf,optionen,farbe,farbe1,farbvs,farbueb,farbrnd,werkzeugoption,pen,paintbucket,eraser,line,werkzeugliste,spray;
 	private ListBox datei;
 	private BeschriftungsFeld fbb,fhb,clock1,clock2,clock3;
 	private ZahlenFeld fbz,fhz;
@@ -35,6 +37,7 @@ public class Paint {
 		lw = new Leinwand(0,30,fb,fh-30,f);
 		m = new Maus(lw);
 		s = new Stift(lw);
+		t = new Tastatur();
 		endknopf = new Knopf("Ende",fb-100,0,100,30,f);
 		optionen = new Knopf("Optionen",fb-200,0,100,30,f);
 		fbb = new BeschriftungsFeld("FensterBreite", 0, 0, 100, 50, fo);
@@ -68,18 +71,27 @@ public class Paint {
 		farbvs.setzeHintergrundFarbe(s.farbe());
 		farbueb = new Knopf("Übernehmen",850,450,150,50,ff);
 		farbrnd = new Knopf("Zufällige Farbe", 800, 225, 150, 50, ff);
+		paintbucket = new Knopf("",100,50,50,50,fw);
+		paintbucket.setzeIcon("/infpaint/bucket.png");
+		line = new Knopf("",150,50,50,50,fw);
+		line.setzeIcon("/infpaint/line.png");
+		eraser = new Knopf("",200,50,50,50,fw);
+		eraser.setzeIcon("/infpaint/eraser.png");
+		werkzeugliste = new Knopf("Werkzeuge", fb-300,  0, 100, 30,f);
 		datei.fuegeAn("Datei");
 		datei.fuegeAn("Neu");
 		datei.fuegeAn("Speichern");
 		datei.fuegeAn("Laden");
 		datei.setzeSchriftGroesse(15);
-		clock1 = new BeschriftungsFeld(hr, fb-270, -10, 50, 50, f);
+		spray = new Knopf("",50,100,50,50,fw);
+		spray.setzeIcon("/infpaint/Spray.png");
+		clock1 = new BeschriftungsFeld(hr, fb-370, -10, 50, 50, f);
 		clock1.setzeSchriftGroesse(15);
 		clock1.setzeSchriftFarbe(Farbe.WEISS);
-		clock2 = new BeschriftungsFeld(min, fb-220, -10, 50, 50, f);
+		clock2 = new BeschriftungsFeld(min, fb-320, -10, 50, 50, f);
 		clock2.setzeSchriftGroesse(15);
 		clock2.setzeSchriftFarbe(Farbe.WEISS);
-		clock3 = new BeschriftungsFeld(":", fb-240, -12, 50, 50, f);
+		clock3 = new BeschriftungsFeld(":", fb-340, -12, 50, 50, f);
 		clock3.setzeSchriftGroesse(15);
 		clock3.setzeSchriftFarbe(Farbe.WEISS);
 		
@@ -100,8 +112,28 @@ public class Paint {
 			this.windowswitches();
 			this.uhr();
 			this.farbe();
+			this.keybindings();
+			this.werkzeugswitches();
 		}
 		System.exit(0);
+	}
+
+
+
+	private void keybindings() {
+		if(t.wurdeGedrueckt()) {
+			t.holeZeichen();
+			
+			switch((int)t.aktuellesZeichen()) {
+			case 27:
+				lw.löscheAlles();
+				break;
+			
+			}
+			
+			
+			
+		}
 	}
 
 
@@ -160,8 +192,9 @@ public class Paint {
 			ff.setzeSichtbar(true);
 		}
 		
-		
-		
+		if(werkzeugliste.wurdeGedrueckt()) {
+			fw.setzeSichtbar(true);
+		}
 	}
 
 
@@ -189,8 +222,6 @@ public class Paint {
 		
 	}
 
-
-
 	private void dateibox() {
 		if(datei.wurdeGewaehlt()){
 			String dateistring = datei.gewaehlterText();
@@ -215,8 +246,6 @@ public class Paint {
 		}
 	}
 
-
-
 	private void endswitch() {
 		if(endknopf.wurdeGedrueckt()) {
 			ende=true;
@@ -224,11 +253,33 @@ public class Paint {
 		
 	}
 
-
+	private void werkzeugswitches() {
+		
+		if(pen.wurdeGedrueckt()) {
+			penstate=0;
+		}
+		
+		if(eraser.wurdeGedrueckt()) {
+			penstate=1;
+		}
+		
+		if(line.wurdeGedrueckt()) {
+			penstate=2;
+		}
+		
+		if(paintbucket.wurdeGedrueckt()) {
+			penstate=3;
+		}		
+		
+		if(spray.wurdeGedrueckt()) {
+			penstate=4;
+		}
+	}
 
 	private void schreiben() {
 		switch(penstate) {
 		case 0:
+			s.normal();
 			if(m.istGedrueckt()) {
 				s.runter();
 			}else {
@@ -236,9 +287,118 @@ public class Paint {
 			}
 			break;
 		case 1:
+			s.radiere();
+			if(m.istGedrueckt()) {
+				s.runter();
+			}else {
+				s.hoch();
+			}
+			break;
+		case 2:
+			
+			break;
+		case 3:
+			if(m.istGedrueckt()) {
+				s.normal();
+				boolean fuew = true;
+				int i = 0;
+				s.hoch();
+				s.bewegeAuf(m.hPosition(), m.vPosition());
+				fuey = m.vPosition();
+				fuex = m.hPosition();
+				lw.setzeFarbeBei(fuex, fuey, s.farbe());
+				Dialog.info("Info", "Zum Unterbrechen Rechte Maustaste drücken");
+				while (fuew) {
+						if(i>=5) {
+							this.redraw();
+							i=0;
+						}
+						if(m.istRechtsGedrueckt()) {
+							fuew=false;
+						}
+						
+					if(!lw.farbeVon(fuex, fuey).equals(s.farbe())) {
+						lw.setzeFarbeBei(fuex, fuey, s.farbe());
+						i++;
+					}else {
+						if(!lw.farbeVon(fuex+1, fuey).equals(s.farbe())) {
+							lw.setzeFarbeBei(fuex+1, fuey, s.farbe());
+							fuex++;
+							i++;
+						}else {
+							if(!lw.farbeVon(fuex, fuey-1).equals(s.farbe())) {
+								lw.setzeFarbeBei(fuex, fuey-1, s.farbe());
+								fuey--;
+								i++;
+							}else {
+								if(!lw.farbeVon(fuex-1, fuey).equals(s.farbe())) {
+									lw.setzeFarbeBei(fuex-1, fuey, s.farbe());
+									fuex--;
+									i++;
+								}else {
+									if(!lw.farbeVon(fuex, fuey+1).equals(s.farbe())) {
+										lw.setzeFarbeBei(fuex, fuey+1, s.farbe());
+										fuey++;
+										i++;
+									}else {
+										if(!lw.farbeVon(fuex+1, fuey+1).equals(s.farbe())) {
+											lw.setzeFarbeBei(fuex+1, fuey+1, s.farbe());
+											fuey++;
+											fuex++;
+											i++;
+										}else {
+											if(!lw.farbeVon(fuex+1, fuey-1).equals(s.farbe())) {
+												lw.setzeFarbeBei(fuex+1, fuey-1, s.farbe());
+												fuey--;
+												fuex++;
+												i++;
+											}else {
+												if(!lw.farbeVon(fuex-1, fuey+1).equals(s.farbe())) {
+													lw.setzeFarbeBei(fuex-1, fuey+1, s.farbe());
+													fuey++;
+													fuex--;
+													i++;
+												}else {
+													if(!lw.farbeVon(fuex-1, fuey-1).equals(s.farbe())) {
+														lw.setzeFarbeBei(fuex-1, fuey-1, s.farbe());
+														fuey--;
+														fuex--;
+														i++;
+													}else {
+														fuew = false;
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+							
+						}
+							
+							
+							
+							
+						}
+				
+							}
+			}
+			break;
+		case 4:
+			s.wechsle();
+			if(m.istGedrueckt()) {
+				s.runter();
+			}else {
+				s.hoch();
+			}
 			break;
 		}
 		
+	}
+
+	private void redraw() {
+		lw.setzeGroesse(fb+1, fh-30);
+		lw.setzeGroesse(fb, fh-30);
 	}
 	
 	
