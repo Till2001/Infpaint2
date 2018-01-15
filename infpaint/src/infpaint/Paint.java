@@ -10,17 +10,21 @@ public class Paint {
 	int fuey = 0;
 	int penstate = 0;
 	int sd = 2;
+	int fvlw1 = 0;
+	int fvlw2 = 0;
+	int fvlw3 = 0;
+	int fvlws = 0;
 	private boolean ende;
 	private String hr,min;
-	private Fenster f,ff,fo,fw,fwo;
+	private Fenster f,ff,fo,fw;
 	private Leinwand lw;
 	private Stift s;
 	private Tastatur t;
 	private Maus m;
-	private Knopf endknopf,optionen,farbe,farbe1,farbvs,farbueb,farbrnd,werkzeugoption,pen,paintbucket,eraser,line,werkzeugliste,spray;
+	private Knopf endknopf,optionen,farbe,farbe1,farbvs,farbueb,farbrnd,pen,paintbucket,eraser,line,werkzeugliste,spray,farbverlauf,sdh,sdr;
 	private ListBox datei;
-	private BeschriftungsFeld fbb,fhb,clock1,clock2,clock3;
-	private ZahlenFeld fbz,fhz;
+	private BeschriftungsFeld fbb,fhb,sdb,clock1,clock2,clock3;
+	private ZahlenFeld fbz,fhz,sdz;
 	private Rollbalken rgb1,rgb2,rgb3;
 
 	
@@ -31,9 +35,8 @@ public class Paint {
 		min = String.valueOf(Hilfe.minute());
 		f = new Fenster("InfPaint",fb,fh,true);
 		ff = new Fenster("Farbauswahl",1000,500,false);
-		fw = new Fenster("Werkzeugauswahl",300,500,true);
+		fw = new Fenster("Werkzeugauswahl",300,750,true);
 		fo = new Fenster("Optionen", 500, 500, false);
-		fwo = new Fenster("Werkzeugoptionen",500,500,false);
 		lw = new Leinwand(0,30,fb,fh-30,f);
 		m = new Maus(lw);
 		s = new Stift(lw);
@@ -57,7 +60,6 @@ public class Paint {
 		farbe1.setzeHintergrundFarbe(s.farbe());
 		datei = new ListBox(0,0,100,30,f);
 		f.setzeHintergrundFarbe(Farbe.SCHWARZ);
-		werkzeugoption = new Knopf("Werkzeugoptionen", 50, 450, 200, 50, fw);
 		pen = new Knopf("", 50, 50, 50, 50, fw);
 		pen.setzeIcon("/infpaint/pencil.png");
 		rgb1 = new Rollbalken(false, 500, 50, 50, 400, ff);
@@ -78,6 +80,7 @@ public class Paint {
 		eraser = new Knopf("",200,50,50,50,fw);
 		eraser.setzeIcon("/infpaint/eraser.png");
 		werkzeugliste = new Knopf("Werkzeuge", fb-300,  0, 100, 30,f);
+		farbverlauf = new Knopf("f", 100, 100, 50, 50, fw);
 		datei.fuegeAn("Datei");
 		datei.fuegeAn("Neu");
 		datei.fuegeAn("Speichern");
@@ -85,6 +88,15 @@ public class Paint {
 		datei.setzeSchriftGroesse(15);
 		spray = new Knopf("",50,100,50,50,fw);
 		spray.setzeIcon("/infpaint/Spray.png");
+		sdb = new BeschriftungsFeld("Stiftdicke", 50, 371, 170, 30, fw);
+		sdb.setzeRand(Farbe.SCHWARZ, 1);
+		sdz = new ZahlenFeld(50, 400, 170, 30, fw);
+		sdz.setzeRand(Farbe.SCHWARZ, 1);
+		sdz.setzeZahl(sd);
+		sdh = new Knopf("",220,371,30,30,fw);
+		sdh.setzeIcon("/infpaint/hoch.png");
+		sdr = new Knopf("", 220, 400, 30, 30, fw);
+		sdr.setzeIcon("/infpaint/runter.png");
 		clock1 = new BeschriftungsFeld(hr, fb-370, -10, 50, 50, f);
 		clock1.setzeSchriftGroesse(15);
 		clock1.setzeSchriftFarbe(Farbe.WEISS);
@@ -114,6 +126,7 @@ public class Paint {
 			this.farbe();
 			this.keybindings();
 			this.werkzeugswitches();
+			this.stiftdicke();
 		}
 		System.exit(0);
 	}
@@ -177,15 +190,29 @@ public class Paint {
 		
 	}
 
-
+	private void stiftdicke() {
+		if(sdz.textWurdeGeaendert()) {
+			sd=sdz.ganzzahl();
+			this.intov();
+		}
+		
+		if(sdh.wurdeGedrueckt()) {
+			sd++;
+			sdz.setzeZahl(sd);
+			this.intov();
+		}
+		
+		if(sdr.wurdeGedrueckt()) {
+			sd--;
+			sdz.setzeZahl(sd);
+			this.intov();
+		}
+		
+	}
 
 	private void windowswitches() {
 		if(optionen.wurdeGedrueckt()) {
 			fo.setzeSichtbar(true);
-		}
-		
-		if(werkzeugoption.wurdeGedrueckt()) {
-			fwo.setzeSichtbar(true);
 		}
 		
 		if(farbe.wurdeGedrueckt()) {
@@ -197,8 +224,28 @@ public class Paint {
 		}
 	}
 
-
-
+	private void intov() {
+		if(sd>=51) {
+			sd=50;
+			sdz.setzeZahl(sd);
+			this.sdu();
+		}else {
+			this.sdu();
+		}
+		if(sd<=0) {
+			sd=1;
+			sdz.setzeZahl(sd);
+			this.sdu();
+		}else {
+			this.sdu();
+		}
+		
+	}
+	
+	private void sdu() {
+		s.setzeLinienBreite(sd);
+	}
+	
 	private void uiscaling() {
 		f.setzeGroesse(fb, fh);
 		lw.setzeGroesse(fb, fh-30);
@@ -273,6 +320,10 @@ public class Paint {
 		
 		if(spray.wurdeGedrueckt()) {
 			penstate=4;
+		}
+		
+		if(farbverlauf.wurdeGedrueckt()) {
+			penstate=5;
 		}
 	}
 
@@ -392,6 +443,14 @@ public class Paint {
 				s.hoch();
 			}
 			break;
+		case 5:
+			if(m.istGedrueckt()) {
+				s.runter();
+				this.fvl();
+			}else {
+				s.hoch();
+			}
+			break;
 		}
 		
 	}
@@ -401,6 +460,46 @@ public class Paint {
 		lw.setzeGroesse(fb, fh-30);
 	}
 	
-	
+	private void fvl() {
+		s.setzeFarbe(Farbe.rgb(fvlw1, fvlw2, fvlw3));
+		switch(fvlws) {
+		case 0:
+			if(fvlw1<255) {
+				fvlw1++;
+			}else {
+				fvlws=1;
+			}
+			break;
+		case 1:
+			if(fvlw2<255) {
+				fvlw2++;
+			}else {
+				fvlws=2;
+			}
+			break;
+		case 2:
+			if(fvlw3<255) {
+				fvlw3++;
+			}else {
+				fvlws=3;
+			}
+			break;
+		case 3:
+			if(fvlw1>0) {
+				fvlw1--;
+			}else {
+				fvlws=4;
+			}
+			break;
+		case 4:
+			if(fvlw3>0) {
+				fvlw3--;
+			}else {
+				fvlws=0;
+			}
+			break;
+		}
+		
+	}
 }
 	
