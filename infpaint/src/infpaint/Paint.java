@@ -80,7 +80,8 @@ public class Paint {
 		eraser = new Knopf("",200,50,50,50,fw);
 		eraser.setzeIcon("/infpaint/eraser.png");
 		werkzeugliste = new Knopf("Werkzeuge", fb-300,  0, 100, 30,f);
-		farbverlauf = new Knopf("f", 100, 100, 50, 50, fw);
+		farbverlauf = new Knopf("", 100, 100, 50, 50, fw);
+		farbverlauf.setzeIcon("/infpaint/rainbow.png");
 		datei.fuegeAn("Datei");
 		datei.fuegeAn("Neu");
 		datei.fuegeAn("Speichern");
@@ -466,33 +467,48 @@ public class Paint {
 		case 0:
 			if(fvlw1<255) {
 				fvlw1++;
-			}else {
+			}else { //1
 				fvlws=1;
 			}
 			break;
 		case 1:
 			if(fvlw2<255) {
 				fvlw2++;
-			}else {
+			}else { //1|2
 				fvlws=2;
 			}
 			break;
 		case 2:
 			if(fvlw3<255) {
 				fvlw3++;
-			}else {
+			}else { //1|2|3
 				fvlws=3;
 			}
 			break;
 		case 3:
 			if(fvlw1>0) {
 				fvlw1--;
-			}else {
+			}else { //2|3
 				fvlws=4;
 			}
 			break;
 		case 4:
-			if(fvlw3>0) {
+			if(fvlw2>0) {
+				fvlw2--;
+			}else { //3
+				fvlws=5;
+			}
+			break;
+		case 5:
+			if(fvlw1<255) {
+				fvlw1++;
+			}else { //1|3
+				fvlws=6;
+			}
+			break;
+		case 6:
+			if(fvlw1>0||fvlw3>0) {
+				fvlw1--;
 				fvlw3--;
 			}else {
 				fvlws=0;
