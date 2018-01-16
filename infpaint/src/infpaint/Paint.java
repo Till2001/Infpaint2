@@ -1,6 +1,8 @@
 package infpaint;
 import basiX.*;
 
+import java.awt.Color;
+import java.util.*;
 
 public class Paint {
 
@@ -21,8 +23,8 @@ public class Paint {
 	private Stift s;
 	private Tastatur t;
 	private Maus m;
-	private Knopf endknopf,optionen,farbe,farbe1,farbvs,farbueb,farbrnd,pen,paintbucket,eraser,line,werkzeugliste,spray,farbverlauf,sdh,sdr;
-	private ListBox datei;
+	private Knopf endknopf,optionen,farbe,farbe1,farbvs,farbueb,farbrnd,pen,paintbucket,eraser,line,werkzeugliste,spray,farbverlauf,sdh,sdr,square;
+	private ListBox datei,form;
 	private BeschriftungsFeld fbb,fhb,sdb,clock1,clock2,clock3;
 	private ZahlenFeld fbz,fhz,sdz;
 	private Rollbalken rgb1,rgb2,rgb3;
@@ -82,6 +84,8 @@ public class Paint {
 		werkzeugliste = new Knopf("Werkzeuge", fb-300,  0, 100, 30,f);
 		farbverlauf = new Knopf("", 100, 100, 50, 50, fw);
 		farbverlauf.setzeIcon("/infpaint/rainbow.png");
+		square = new Knopf("",150,100,50,50,fw);
+		square.setzeIcon("/infpaint/square.png");
 		datei.fuegeAn("Datei");
 		datei.fuegeAn("Neu");
 		datei.fuegeAn("Speichern");
@@ -98,6 +102,9 @@ public class Paint {
 		sdh.setzeIcon("/infpaint/hoch.png");
 		sdr = new Knopf("", 220, 400, 30, 30, fw);
 		sdr.setzeIcon("/infpaint/runter.png");
+		form = new ListBox(200, 0, 100, 30, f);
+		form.fuegeAn("Formen");
+		form.setzeSchriftGroesse(15);
 		clock1 = new BeschriftungsFeld(hr, fb-370, -10, 50, 50, f);
 		clock1.setzeSchriftGroesse(15);
 		clock1.setzeSchriftFarbe(Farbe.WEISS);
@@ -108,7 +115,6 @@ public class Paint {
 		clock3.setzeSchriftGroesse(15);
 		clock3.setzeSchriftFarbe(Farbe.WEISS);
 		
-	
 	}		
 
 
@@ -326,6 +332,30 @@ public class Paint {
 		if(farbverlauf.wurdeGedrueckt()) {
 			penstate=5;
 		}
+		
+		if(square.wurdeGedrueckt()) {
+			int l = Dialog.eingabeINT("Eingabe", "Wie groß sollen die Seiten des Quadrats sein?");
+			int w = Dialog.eingabeINT("Eingabe", "In welchem Winkel soll das Quadrat gezeichnet werden?(0=nach Rechts unten,90,nach rechts ,180=nach links oben,270=nach rechts oben)");
+			if(w>360) {
+				w=360;
+			}
+			Dialog.info("Info","Klicken sie auf den Ursprung des Quadrats, rechte Maustatse zum abbrechen" );
+			boolean a = true;
+			while(a) {
+				if(m.istGedrueckt()) {
+					s.hoch();
+					s.bewegeAuf(m.hPosition(), m.vPosition());
+					s.dreheBis(w);
+					s.zeichneRechteck(l, l);
+					a = false;
+				}else if (m.istRechtsGedrueckt()) {
+					a = false;
+					
+				}else {
+				Hilfe.kurzePause();
+				}
+				}
+		}
 	}
 
 	private void schreiben() {
@@ -350,90 +380,44 @@ public class Paint {
 			
 			break;
 		case 3:
+			
 			if(m.istGedrueckt()) {
+				Stack<Integer> st1 = new Stack<Integer>();
+				Stack<Integer> st2 = new Stack<Integer>();
+				Stack<Color> st3 = new Stack<Color>();
 				s.normal();
-				boolean fuew = true;
-				int i = 0;
+				int tx = 0;
+				int ty = 0;
 				s.hoch();
 				s.bewegeAuf(m.hPosition(), m.vPosition());
-				fuey = m.vPosition();
-				fuex = m.hPosition();
-				lw.setzeFarbeBei(fuex, fuey, s.farbe());
+				st3.add(lw.farbeVon(m.hPosition(),m.vPosition()));
+				st1.clear();
+				st2.clear();
+				st1.add(m.hPosition());
+				st2.add(m.vPosition());
 				Dialog.info("Info", "Zum Unterbrechen Rechte Maustaste drücken");
-				while (fuew) {
-						if(i>=5) {
-							this.redraw();
-							i=0;
-						}
-						if(m.istRechtsGedrueckt()) {
-							fuew=false;
-						}
+				while(!st1.empty()||!st2.empty()) {
+					tx=st1.pop();
+					ty=st2.pop();
+					this.redraw();
+					if(m.istRechtsGedrueckt()) {
+						st1.clear();
+						st2.clear();
+					}
+					if(lw.farbeVon(tx, ty).equals(st3.peek())) {
+						lw.setzeFarbeBei(tx, ty, s.farbe());
+						st1.push(tx+1); 
+						st2.push(ty);
+						st1.push(tx-1); 
+						st2.push(ty);
+						st1.push(tx); 
+						st2.push(ty+1);
+						st1.push(tx); 
+						st2.push(ty-1);
 						
-					if(!lw.farbeVon(fuex, fuey).equals(s.farbe())) {
-						lw.setzeFarbeBei(fuex, fuey, s.farbe());
-						i++;
-					}else {
-						if(!lw.farbeVon(fuex+1, fuey).equals(s.farbe())) {
-							lw.setzeFarbeBei(fuex+1, fuey, s.farbe());
-							fuex++;
-							i++;
-						}else {
-							if(!lw.farbeVon(fuex, fuey-1).equals(s.farbe())) {
-								lw.setzeFarbeBei(fuex, fuey-1, s.farbe());
-								fuey--;
-								i++;
-							}else {
-								if(!lw.farbeVon(fuex-1, fuey).equals(s.farbe())) {
-									lw.setzeFarbeBei(fuex-1, fuey, s.farbe());
-									fuex--;
-									i++;
-								}else {
-									if(!lw.farbeVon(fuex, fuey+1).equals(s.farbe())) {
-										lw.setzeFarbeBei(fuex, fuey+1, s.farbe());
-										fuey++;
-										i++;
-									}else {
-										if(!lw.farbeVon(fuex+1, fuey+1).equals(s.farbe())) {
-											lw.setzeFarbeBei(fuex+1, fuey+1, s.farbe());
-											fuey++;
-											fuex++;
-											i++;
-										}else {
-											if(!lw.farbeVon(fuex+1, fuey-1).equals(s.farbe())) {
-												lw.setzeFarbeBei(fuex+1, fuey-1, s.farbe());
-												fuey--;
-												fuex++;
-												i++;
-											}else {
-												if(!lw.farbeVon(fuex-1, fuey+1).equals(s.farbe())) {
-													lw.setzeFarbeBei(fuex-1, fuey+1, s.farbe());
-													fuey++;
-													fuex--;
-													i++;
-												}else {
-													if(!lw.farbeVon(fuex-1, fuey-1).equals(s.farbe())) {
-														lw.setzeFarbeBei(fuex-1, fuey-1, s.farbe());
-														fuey--;
-														fuex--;
-														i++;
-													}else {
-														fuew = false;
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-							
-						}
-							
-							
-							
-							
-						}
-				
-							}
+					}
+					
+				}
 			}
 			break;
 		case 4:
@@ -460,6 +444,7 @@ public class Paint {
 		lw.setzeGroesse(fb+1, fh-30);
 		lw.setzeGroesse(fb, fh-30);
 	}
+	
 	
 	private void fvl() {
 		s.setzeFarbe(Farbe.rgb(fvlw1, fvlw2, fvlw3));
@@ -507,9 +492,17 @@ public class Paint {
 			}
 			break;
 		case 6:
-			if(fvlw1>0||fvlw3>0) {
+			if(fvlw1>0||fvlw2<255||fvlw3>0) {
 				fvlw1--;
+				fvlw2++;
 				fvlw3--;
+			}else { // 2
+				fvlws=7;
+			}
+			break;
+		case 7:
+			if(fvlw2>0) {
+				fvlw2--;
 			}else {
 				fvlws=0;
 			}
