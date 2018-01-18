@@ -305,7 +305,7 @@ public class Paint {
 
 	private void endswitch() {
 		if(endknopf.wurdeGedrueckt()) {
-			ende=true;
+			ende=true; //ende
 		}
 		
 	}
