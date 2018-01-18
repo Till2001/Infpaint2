@@ -1,22 +1,16 @@
 package infpaint;
 import basiX.*;
-
 import java.awt.Color;
-import java.io.PipedInputStream;
 import java.util.*;
+import infpaint.*;
 
 public class Paint {
 
 	int fh = 1000;
 	int fb = 1500;
-	int fuex = 0;
-	int fuey = 0;
-	int penstate = 0;
-	int sd = 2;
-	int fvlw1 = 0;
-	int fvlw2 = 0;
-	int fvlw3 = 0;
-	int fvlws = 0;
+	int sd = 5;
+	int fvlw1,fvlw2,fvlw3,fvlws,txt,tyt,timeout,penstate,fuex,fuey;
+	int maxtimeout = 2;
 	private boolean ende;
 	private String hr,min;
 	private Fenster f,ff,fo,fw;
@@ -24,12 +18,15 @@ public class Paint {
 	private Stift s;
 	private Tastatur t;
 	private Maus m;
-	private Knopf endknopf,optionen,farbe,farbe1,farbvs,farbueb,farbrnd,pen,paintbucket,eraser,line,werkzeugliste,spray,farbverlauf,sdh,sdr,square,pipette;
+	private Knopf endknopf,optionen,farbe,farbe1,farbvs,farbueb,farbrnd,pen,paintbucket,eraser,line,werkzeugliste,spray,farbverlauf,sdh,sdr,text,pipette;
 	private ListBox datei,form;
-	private BeschriftungsFeld fbb,fhb,sdb,clock1,clock2,clock3;
-	private ZahlenFeld fbz,fhz,sdz;
+	private ListAuswahl schriftwahl;
+	private BeschriftungsFeld fbb,fhb,sdb,clock1,clock2,clock3,schrift,timeoutdesc;
+	private ZahlenFeld fbz,fhz,sdz,timeoutz;
 	private Rollbalken rgb1,rgb2,rgb3;
-
+	private TextFeld texttext;
+	private WahlBox normalbox,strichbox;
+	private WahlBoxGruppe wbg;
 	
 
 	public Paint() {
@@ -68,9 +65,9 @@ public class Paint {
 		rgb1 = new Rollbalken(false, 500, 50, 50, 400, ff);
 		rgb2 = new Rollbalken(false, 600, 50, 50, 400, ff);
 		rgb3 = new Rollbalken(false, 700, 50, 50, 400, ff);
-		rgb1.setzeWerte(0, 255, 255);
-		rgb2.setzeWerte(0, 255, 255);
-		rgb3.setzeWerte(0, 255, 255);		
+		rgb1.setzeWerte(0, 255, 0);
+		rgb2.setzeWerte(0, 255, 0);
+		rgb3.setzeWerte(0, 255, 0);		
 		farbvs = new Knopf("", 50, 50, 400, 400, ff);
 		farbvs.setzeBenutzbar(true);
 		farbvs.setzeHintergrundFarbe(s.farbe());
@@ -87,8 +84,8 @@ public class Paint {
 		werkzeugliste = new Knopf("Werkzeuge", fb-300,  0, 100, 30,f);
 		farbverlauf = new Knopf("", 100, 100, 50, 50, fw);
 		farbverlauf.setzeIcon("/infpaint/rainbow.png");
-		square = new Knopf("",150,100,50,50,fw);
-		square.setzeIcon("/infpaint/square.png");
+		text = new Knopf("",150,100,50,50,fw);
+		text.setzeIcon("/infpaint/text.png");
 		datei.fuegeAn("Datei");
 		datei.fuegeAn("Neu");
 		datei.fuegeAn("Speichern");
@@ -108,6 +105,12 @@ public class Paint {
 		form = new ListBox(200, 0, 100, 30, f);
 		form.fuegeAn("Formen");
 		form.setzeSchriftGroesse(15);
+		form.fuegeAn("Quadrat");
+		form.fuegeAn("Rechteck");
+		form.fuegeAn("Dreieck");
+		form.fuegeAn("Kreis");
+		texttext = new TextFeld(0, 0, 150,50, lw);
+		texttext.setzeSichtbar(false);
 		clock1 = new BeschriftungsFeld(hr, fb-370, -10, 50, 50, f);
 		clock1.setzeSchriftGroesse(15);
 		clock1.setzeSchriftFarbe(Farbe.WEISS);
@@ -117,13 +120,33 @@ public class Paint {
 		clock3 = new BeschriftungsFeld(":", fb-340, -12, 50, 50, f);
 		clock3.setzeSchriftGroesse(15);
 		clock3.setzeSchriftFarbe(Farbe.WEISS);
-		
+		normalbox = new WahlBox("Normal", 50, 600, 150, 25, fw);
+		strichbox = new WahlBox("Gestrichelt",50,625,150,25,fw);
+		wbg = new WahlBoxGruppe();
+		wbg.fuegeEin(normalbox);
+		wbg.fuegeEin(strichbox);
+		wbg.waehleBox(normalbox);
+		schriftwahl = new ListAuswahl(0, 127, 149, 100, fo);
+		schriftwahl.fuegeAn("Standart");
+		schriftwahl.fuegeAn("Comic Sans");
+		schriftwahl.fuegeAn("Ittalic");
+		schriftwahl.setzeRand(Farbe.SCHWARZ, 1);
+		schrift = new BeschriftungsFeld("Schriftart", 0, 98, 149, 30, fo);
+		schrift.setzeRand(Farbe.SCHWARZ, 1);
+		timeoutdesc = new BeschriftungsFeld("Timeout Zeit", 0, 226, 100, 30, fo);
+		timeoutdesc.setzeRand(Farbe.SCHWARZ, 1);
+		timeoutz = new ZahlenFeld(99, 226, 50, 30, fo);
+		timeoutz.setzeRand(Farbe.SCHWARZ, 1);
+
 	}		
 
 
 	
-	public void main() {
-		
+	public void startup() {
+		Dialog.info("Info", "Vielen dank das sie sich für infpaint entschieden haben.");
+		this.main();
+	}
+	private void main() {
 		while(!ende) {
 			Hilfe.kurzePause();
 			s.bewegeAuf(m.hPosition(), m.vPosition());
@@ -137,11 +160,16 @@ public class Paint {
 			this.keybindings();
 			this.werkzeugswitches();
 			this.stiftdicke();
+			this.formen();
+			this.boxgruppen();
+			this.bildschirmschoner();
 		}
+		if(Dialog.entscheidung("Entscheidung", "Möchten sie das Programm wirklich beenden?")) {
 		System.exit(0);
+		}
+		ende=false;
+		this.main();
 	}
-
-
 
 	private void keybindings() {
 		if(t.wurdeGedrueckt()) {
@@ -153,14 +181,92 @@ public class Paint {
 				break;
 			
 			}
-			
-			
-			
 		}
 	}
+	private void formen() {
+		if(form.wurdeGewaehlt()) {
+			String formstring = form.gewaehlterText();
+			switch(formstring) {
+			case "Quadrat":
+				s.hoch();
+				int lq = Dialog.eingabeINT("Eingabe", "Wie groß sollen die Seiten des Quadrats sein?");
+				int wq = Dialog.eingabeINT("Eingabe", "In welchem Winkel soll das Quadrat gezeichnet werden?(0=nach Rechts unten,90,nach rechts ,180=nach links oben,270=nach rechts oben)");
+				if(wq>360) {
+					wq=360;
+				}
+				Dialog.info("Info","Klicken sie auf den Ursprung des Quadrats, rechte Maustatse zum abbrechen" );
+				while(!m.istGedrueckt()) {
+					Hilfe.kurzePause();
+				}
+				s.bewegeAuf(m.hPosition(), m.vPosition());
+				s.dreheBis(wq);
+				s.zeichneRechteck(lq, lq);
+				break;
+			case "Rechteck":
+				int lo = Dialog.eingabeINT("Eingabe", "Wie lang sollen die obere und untere Seite des Rechtecks sein?");
+				int ls = Dialog.eingabeINT("Eingabe", "Wie lang sollen die linke und rechte Seite des Rechtecks sein?");
+				int rw = Dialog.eingabeINT("Eingabe", "In welchem winkel soll das Rechteck gezeichnet werden?");
+				if(rw>360) {
+					rw=360;
+				}
+				s.hoch();
+				Dialog.info("Info", "Klicken sie auf den Eckpunkt ihres Rechtecks");
+				while(!m.istGedrueckt()) {
+					Hilfe.kurzePause();
+				}
+				s.bewegeAuf(m.hPosition(), m.vPosition());
+				s.dreheBis(rw);
+				s.zeichneRechteck(lo, ls);
+				break;
+			case "Dreieck":
+				s.hoch();
+				Dialog.info("Info", "Klicken sie auf den ersten eckpunkt");
+				while (!m.istGedrueckt()) {
+					Hilfe.kurzePause();
+				}
+				Hilfe.warte(100);
+				s.bewegeAuf(m.hPosition(), m.vPosition());
+				int dx1 = m.hPosition();
+				int dy1 = m.vPosition();
 
+				Dialog.info("Info", "Klicken sie auf den zweiten eckpunkt");
 
+				while (!m.istGedrueckt()) {
+					Hilfe.kurzePause();
+				}
+				Hilfe.warte(100);
+				s.bewegeAuf(m.hPosition(), m.vPosition());
+				int dx2 = m.hPosition();
+				int dy2 = m.vPosition();
+				Dialog.info("Info", "Klicken sie auf den dritten eckpunkt");
 
+				while (!m.istGedrueckt()) {
+					Hilfe.kurzePause();
+				}
+				Hilfe.warte(100);
+
+				s.bewegeAuf(m.hPosition(), m.vPosition());
+				int dx3 = m.hPosition();
+				int dy3 = m.vPosition();
+				s.runter();
+				s.dreieck(dx1, dy1, dx2, dy2, dx3, dy3);
+				s.hoch();
+				break;
+			case "Kreis":
+				int r = Dialog.eingabeINT("Eingabe", "Wie groß soll der Radius des Kreis sein?");
+				int kd = Dialog.eingabeINT("Eingabe", "Wie breit soll der Rand des Kreis sein?");
+				int td = sd;
+				s.setzeLinienBreite(kd);
+				Dialog.info("Info", "Klicken sie auf den Mittlepunkt des Kreises");
+				while(!m.istGedrueckt()) {
+					Hilfe.kurzePause();
+				}
+				s.zeichneKreis(r);
+				s.setzeLinienBreite(td);
+				break;
+			}
+		}
+	}
 	private void farbe() {
 		if(rgb1.wurdeBewegt()||rgb2.wurdeBewegt()||rgb3.wurdeBewegt()) {
 			farbvs.setzeHintergrundFarbe(Farbe.rgb(rgb1.wert(), rgb2.wert(), rgb3.wert()));	
@@ -183,9 +289,6 @@ public class Paint {
 		
 		
 	}
-
-
-
 	private void uhr() {
 		if(!hr.equals(String.valueOf(Hilfe.stunde()))) {
 			hr = String.valueOf(Hilfe.stunde());
@@ -234,6 +337,17 @@ public class Paint {
 		}
 	}
 
+	private void boxgruppen() {
+		if(wbg.wurdeGeaendert()) {
+			if(wbg.ausgewaehlteBox().equals(normalbox)) {
+				s.setzeLinienTyp(0);
+				
+			}
+			if(wbg.ausgewaehlteBox().equals(strichbox)) {
+				s.setzeLinienTyp(1,1);
+			}
+		}
+	}
 	private void intov() {
 		if(sd>=51) {
 			sd=50;
@@ -261,10 +375,6 @@ public class Paint {
 		lw.setzeGroesse(fb, fh-30);
 		endknopf.setzePosition(fb-100, 0);
 		optionen.setzePosition(fb-200, 0);
-		
-		
-		
-		
 		if(fbz.ganzzahl()==fb) {
 		}else {
 			fb=fbz.ganzzahl();
@@ -273,10 +383,6 @@ public class Paint {
 		}else {
 			fh=fhz.ganzzahl();
 		}
-		
-		
-		
-		
 	}
 
 	private void dateibox() {
@@ -285,15 +391,16 @@ public class Paint {
 			switch (dateistring) {
 			case "Speichern":
 				lw.speichere();
-				datei.waehle(1);
 				break;
 			case "Laden":
 				lw.ladeBild();
+				
 				break;
 			case "Neu":
 				
 				if(Dialog.entscheidung("Entscheidung", "Möchten sie vorher Speichern?")) {
 					lw.speichere();
+					
 				}
 				
 				
@@ -302,7 +409,6 @@ public class Paint {
 			}
 		}
 	}
-
 	private void endswitch() {
 		if(endknopf.wurdeGedrueckt()) {
 			ende=true; //ende
@@ -310,6 +416,27 @@ public class Paint {
 		
 	}
 
+	
+	private void bildschirmschoner() {
+		if(!m.wurdeBewegt()) {
+			Hilfe.warte(1000);
+			timeout++;			
+			if(timeout>=2) {
+				lw.speichereUnter("/infpaint/tempsave.png");
+				while(!m.wurdeBewegt()) {
+					lw.ladeBild("/infpaint/screensaver.png");
+				}
+				lw.ladeBild("/infpaint/tempsave.png");
+			}
+			
+			
+		}else {
+			timeout = 0;
+		}
+		
+		
+	}
+		
 	private void werkzeugswitches() {
 		
 		if(pen.wurdeGedrueckt()) {
@@ -337,31 +464,11 @@ public class Paint {
 		}
 		
 		if(pipette.wurdeGedrueckt()) {
-			penstate = 6;
+			penstate=6;
 		}
 		
-		if(square.wurdeGedrueckt()) {
-			int l = Dialog.eingabeINT("Eingabe", "Wie groß sollen die Seiten des Quadrats sein?");
-			int w = Dialog.eingabeINT("Eingabe", "In welchem Winkel soll das Quadrat gezeichnet werden?(0=nach Rechts unten,90,nach rechts ,180=nach links oben,270=nach rechts oben)");
-			if(w>360) {
-				w=360;
-			}
-			Dialog.info("Info","Klicken sie auf den Ursprung des Quadrats, rechte Maustatse zum abbrechen" );
-			boolean a = true;
-			while(a) {
-				if(m.istGedrueckt()) {
-					s.hoch();
-					s.bewegeAuf(m.hPosition(), m.vPosition());
-					s.dreheBis(w);
-					s.zeichneRechteck(l, l);
-					a = false;
-				}else if (m.istRechtsGedrueckt()) {
-					a = false;
-					
-				}else {
-				Hilfe.kurzePause();
-				}
-				}
+		if(text.wurdeGedrueckt()) {
+			penstate=7;
 		}
 	}
 
@@ -446,19 +553,30 @@ public class Paint {
 		case 6:
 			if (m.istGedrueckt()) {
 				s.setzeFarbe(lw.farbeVon(m.hPosition(), m.vPosition()));
-				farbvs.setzeHintergrundFarbe(lw.farbeVon(m.hPosition(), m.vPosition()));			
+				farbe1.setzeHintergrundFarbe(lw.farbeVon(m.hPosition(), m.vPosition()));			
+			}
+			break;
+		case 7:
+			if(m.istGedrueckt()) {
+				txt = m.hPosition();
+				tyt = m.vPosition();
+				texttext.setzePosition(m.hPosition(), m.vPosition());
+				texttext.setzeSichtbar(true);
+			}
+			if(texttext.returnWurdeGedrueckt()) {
+				s.hoch();
+				s.bewegeAuf(txt, tyt+30);
+				s.schreibe(texttext.text());
+				texttext.setzeSichtbar(false);
 			}
 			break;
 		}
-		
 	}
 
 	private void redraw() {
 		lw.setzeGroesse(fb+1, fh-30);
 		lw.setzeGroesse(fb, fh-30);
-	}
-	
-	
+	}	
 	private void fvl() {
 		s.setzeFarbe(Farbe.rgb(fvlw1, fvlw2, fvlw3));
 		switch(fvlws) {
@@ -520,8 +638,8 @@ public class Paint {
 				fvlws=0;
 			}
 			break;
+		
 		}
 		
 	}
 }
-	
