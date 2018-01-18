@@ -2,6 +2,7 @@ package infpaint;
 import basiX.*;
 
 import java.awt.Color;
+import java.io.PipedInputStream;
 import java.util.*;
 
 public class Paint {
@@ -23,7 +24,7 @@ public class Paint {
 	private Stift s;
 	private Tastatur t;
 	private Maus m;
-	private Knopf endknopf,optionen,farbe,farbe1,farbvs,farbueb,farbrnd,pen,paintbucket,eraser,line,werkzeugliste,spray,farbverlauf,sdh,sdr,square;
+	private Knopf endknopf,optionen,farbe,farbe1,farbvs,farbueb,farbrnd,pen,paintbucket,eraser,line,werkzeugliste,spray,farbverlauf,sdh,sdr,square,pipette;
 	private ListBox datei,form;
 	private BeschriftungsFeld fbb,fhb,sdb,clock1,clock2,clock3;
 	private ZahlenFeld fbz,fhz,sdz;
@@ -77,6 +78,8 @@ public class Paint {
 		farbrnd = new Knopf("Zuf‰llige Farbe", 800, 225, 150, 50, ff);
 		paintbucket = new Knopf("",100,50,50,50,fw);
 		paintbucket.setzeIcon("/infpaint/bucket.png");
+		pipette = new Knopf("", 200, 100, 50, 50, fw);
+		pipette.setzeIcon("/infpaint/pipette.png");
 		line = new Knopf("",150,50,50,50,fw);
 		line.setzeIcon("/infpaint/line.png");
 		eraser = new Knopf("",200,50,50,50,fw);
@@ -333,6 +336,10 @@ public class Paint {
 			penstate=5;
 		}
 		
+		if(pipette.wurdeGedrueckt()) {
+			penstate = 6;
+		}
+		
 		if(square.wurdeGedrueckt()) {
 			int l = Dialog.eingabeINT("Eingabe", "Wie groﬂ sollen die Seiten des Quadrats sein?");
 			int w = Dialog.eingabeINT("Eingabe", "In welchem Winkel soll das Quadrat gezeichnet werden?(0=nach Rechts unten,90,nach rechts ,180=nach links oben,270=nach rechts oben)");
@@ -434,6 +441,12 @@ public class Paint {
 				this.fvl();
 			}else {
 				s.hoch();
+			}
+			break;
+		case 6:
+			if (m.istGedrueckt()) {
+				s.setzeFarbe(lw.farbeVon(m.hPosition(), m.vPosition()));
+				farbvs.setzeHintergrundFarbe(lw.farbeVon(m.hPosition(), m.vPosition()));			
 			}
 			break;
 		}
