@@ -14,16 +14,16 @@ public class Paint {
 	private boolean ende;
 	private String hr,min;
 	private Fenster f,ff,fo,fw;
-	private Leinwand lw;
+	private Leinwand lw,bd;
 	private Stift s;
 	private Tastatur t;
 	private Maus m;
 	private Knopf endknopf,optionen,farbe,farbe1,farbvs,farbueb,farbrnd,pen,paintbucket,eraser,line,werkzeugliste,spray,farbverlauf,sdh,sdr,text,pipette;
 	private ListBox datei,form;
 	private ListAuswahl schriftwahl;
-	private BeschriftungsFeld fbb,fhb,sdb,clock1,clock2,clock3,schrift,timeoutdesc;
+	private BeschriftungsFeld fbb,fhb,bddesc,sdb,clock1,clock2,clock3,schrift,timeoutdesc;
 	private ZahlenFeld fbz,fhz,sdz,timeoutz;
-	private Rollbalken rgb1,rgb2,rgb3;
+	private Rollbalken rgb1,rgb2,rgb3,bdb1,bdb2,bdb3;
 	private TextFeld texttext;
 	private WahlBox normalbox,strichbox;
 	private WahlBoxGruppe wbg;
@@ -33,11 +33,13 @@ public class Paint {
 		ende = false;
 		hr = String.valueOf(Hilfe.stunde());
 		min = String.valueOf(Hilfe.minute());
-		f = new Fenster("InfPaint",fb,fh,true);
+		f = new Fenster("InfPaint by Till Wegener",fb,fh,true);
 		ff = new Fenster("Farbauswahl",1000,500,false);
 		fw = new Fenster("Werkzeugauswahl",300,750,true);
 		fo = new Fenster("Optionen", 500, 500, false);
-		lw = new Leinwand(0,30,fb,fh-30,f);
+		bd = new Leinwand(0, 30, fb, fh-30, f);
+		lw = new Leinwand(0,30,fb,fh-30,bd);
+		lw.setzeHintergrundFarbe(Farbe.DURCHSICHTIG);
 		m = new Maus(lw);
 		s = new Stift(lw);
 		t = new Tastatur();
@@ -137,7 +139,14 @@ public class Paint {
 		timeoutdesc.setzeRand(Farbe.SCHWARZ, 1);
 		timeoutz = new ZahlenFeld(99, 226, 50, 30, fo);
 		timeoutz.setzeRand(Farbe.SCHWARZ, 1);
-
+		bddesc = new BeschriftungsFeld("Hintergrundfarbe", 0, 255, 150, 30, fo);
+		bddesc.setzeRand(Farbe.SCHWARZ, 1);
+		bdb1 = new Rollbalken(false, 0, 285, 50, 200, fo);
+		bdb2 = new Rollbalken(false, 50, 285, 50, 200, fo);
+		bdb3 = new Rollbalken(false, 100, 285, 50, 200, fo);
+		bdb1.setzeWerte(0, 255, 255);
+		bdb2.setzeWerte(0, 255, 255);
+		bdb3.setzeWerte(0, 255, 255);
 	}		
 
 
@@ -162,7 +171,8 @@ public class Paint {
 			this.stiftdicke();
 			this.formen();
 			this.boxgruppen();
-			this.bildschirmschoner();
+//			this.bildschirmschoner();
+			this.bdcolor();
 		}
 		if(Dialog.entscheidung("Entscheidung", "Möchten sie das Programm wirklich beenden?")) {
 		System.exit(0);
@@ -171,6 +181,13 @@ public class Paint {
 		this.main();
 	}
 
+	private void bdcolor() {
+		if(bdb1.wurdeBewegt()||bdb2.wurdeBewegt()||bdb3.wurdeBewegt()) {
+			bd.setzeHintergrundFarbe(Farbe.rgb(bdb1.wert(), bdb2.wert(), bdb3.wert()));
+		}
+	}
+	
+	
 	private void keybindings() {
 		if(t.wurdeGedrueckt()) {
 			t.holeZeichen();
@@ -422,9 +439,9 @@ public class Paint {
 			Hilfe.warte(1000);
 			timeout++;			
 			if(timeout>=2) {
-				lw.speichereUnter("/infpaint/tempsave.png");
+//				lw.speichereUnter("/infpaint/tempsave.png");
 				while(!m.wurdeBewegt()) {
-					lw.ladeBild("/infpaint/screensaver.png");
+//					lw.ladeBild("/infpaint/screensaver.png");
 				}
 				lw.ladeBild("/infpaint/tempsave.png");
 			}
